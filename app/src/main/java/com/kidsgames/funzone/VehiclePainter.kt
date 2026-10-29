@@ -29,20 +29,21 @@ object VehiclePainter {
     /**
      * @param turn how far the wheels have rolled, in pixels (animates the tyre treads).
      * @param time seconds, used for blinking lights.
+     * @param color body paint; defaults to the vehicle's standard colour.
      */
-    fun draw(c: Canvas, type: VehicleType, w: Float, l: Float, turn: Float, time: Float) {
+    fun draw(c: Canvas, type: VehicleType, w: Float, l: Float, turn: Float, time: Float, color: Int = type.color) {
         rr(c, -w / 2 + w * 0.1f, -l / 2 + l * 0.05f, w / 2 + w * 0.1f, l / 2 + l * 0.05f, w * 0.25f, SHADOW)
         when (type) {
-            VehicleType.RACE_CAR -> raceCar(c, w, l, turn, type.color)
-            VehicleType.CAR -> car(c, w, l, turn, type.color, police = false, time)
-            VehicleType.POLICE -> car(c, w, l, turn, type.color, police = true, time)
-            VehicleType.MOTORBIKE -> motorbike(c, w, l, turn, type.color)
-            VehicleType.BUS -> bus(c, w, l, turn, type.color)
-            VehicleType.TRUCK -> truck(c, w, l, turn, type.color)
-            VehicleType.FIRE_TRUCK -> fireTruck(c, w, l, turn, type.color, time)
-            VehicleType.JCB -> jcb(c, w, l, turn, type.color, time)
-            VehicleType.TRACTOR -> tractor(c, w, l, turn, type.color)
-            VehicleType.MONSTER_TRUCK -> monsterTruck(c, w, l, turn, type.color)
+            VehicleType.RACE_CAR -> raceCar(c, w, l, turn, color)
+            VehicleType.CAR -> car(c, w, l, turn, color, police = false, time)
+            VehicleType.POLICE -> car(c, w, l, turn, color, police = true, time)
+            VehicleType.MOTORBIKE -> motorbike(c, w, l, turn, color)
+            VehicleType.BUS -> bus(c, w, l, turn, color)
+            VehicleType.TRUCK -> truck(c, w, l, turn, color)
+            VehicleType.FIRE_TRUCK -> fireTruck(c, w, l, turn, color, time)
+            VehicleType.JCB -> jcb(c, w, l, turn, color, time)
+            VehicleType.TRACTOR -> tractor(c, w, l, turn, color)
+            VehicleType.MONSTER_TRUCK -> monsterTruck(c, w, l, turn, color)
         }
     }
 

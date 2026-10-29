@@ -8,6 +8,10 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.abs
@@ -25,7 +29,8 @@ import kotlin.random.Random
  * the road (0 = centre) and dist runs along it. The camera follows the player.
  *
  * Controls are made for small hands: the vehicle drives itself forward and
- * follows the child's finger left and right. The big button honks the horn.
+ * follows the child's finger left and right (or the phone's tilt, when
+ * [tiltSteering] is on). The big button honks the horn.
  */
 @SuppressLint("ViewConstructor")
 class RaceView(
@@ -33,7 +38,9 @@ class RaceView(
     private val vehicle: VehicleType,
     private val track: Track,
     private val listener: Listener,
-) : View(context) {
+    private val playerColor: Int = vehicle.color,
+    private val tiltSteering: Boolean = false,
+) : View(context), SensorEventListener {
 
     interface Listener {
         fun say(text: String)
@@ -86,6 +93,8 @@ class RaceView(
     private var lastFrameNanos = 0L
     private var running = false
     private var steeringPointer = -1
+    private val sensors = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+    private var smoothTilt = 0f
 
     // Screen mapping, refreshed in onSizeChanged.
     private var ppm = 1f
@@ -127,13 +136,27 @@ class RaceView(
         running = true
         lastFrameNanos = 0L
         engine.start()
+        if (tiltSteering) {
+            sensors?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
+                sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+            }
+        }
         postInvalidateOnAnimation()
     }
 
     fun pause() {
         running = false
         engine.stop()
+        sensors?.unregisterListener(this)
     }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        // In portrait, tilting the right edge down makes x negative.
+        smoothTilt += (-event.values[0] - smoothTilt) * 0.25f
+        if (steeringPointer < 0) me.targetX = (smoothTilt / 4.5f) * ROAD_HALF
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
 
     override fun onDetachedFromWindow() {
         pause()
@@ -307,10 +330,13 @@ class RaceView(
                 bump(if (vehicle.heavy) 0.75f else 0.55f)
                 burst(o.x, o.dist, Color.parseColor("#757575"), 12)
             }
-            ObstacleKind.MUD -> {
+            ObstacleKind.MUD, ObstacleKind.SANDPIT -> {
+                val sand = o.kind == ObstacleKind.SANDPIT
                 if (!vehicle.offroad) me.slow = 0.9f
-                if (random.nextFloat() < 0.4f) burst(me.x, me.dist, Color.parseColor("#5D4037"), 2)
-                if (first && !vehicle.offroad) listener.say("Splat! Muddy!")
+                if (random.nextFloat() < 0.4f) {
+                    burst(me.x, me.dist, Color.parseColor(if (sand) "#E0C080" else "#5D4037"), 2)
+                }
+                if (first && !vehicle.offroad) listener.say(if (sand) "Sandy! Keep going!" else "Splat! Muddy!")
             }
             ObstacleKind.PUDDLE -> {
                 me.slow = max(me.slow, 0.35f)
@@ -416,6 +442,7 @@ class RaceView(
         drawObstacles(c, fromDist, toDist)
         drawParticles(c)
         (rivals + me).sortedByDescending { it.dist }.forEach { drawRacer(c, it) }
+        if (track.night) drawNightLights(c, fromDist, toDist)
         c.restore()
         drawHud(c)
     }
@@ -559,9 +586,11 @@ class RaceView(
                 rect.inset(m * 0.3f, m * 0.3f)
                 paint.color = roof
                 c.drawRect(rect, paint)
-                paint.color = Color.parseColor("#CFD8DC")
-                c.drawRect(x - m * 1.2f, y - m * 1.5f, x - m * 0.2f, y - m * 0.5f, paint)
-                c.drawRect(x + m * 0.5f, y + m * 0.8f, x + m * 1.5f, y + m * 1.8f, paint)
+                if (!track.night) {
+                    paint.color = Color.parseColor("#CFD8DC")
+                    c.drawRect(x - m * 1.2f, y - m * 1.5f, x - m * 0.2f, y - m * 0.5f, paint)
+                    c.drawRect(x + m * 0.5f, y + m * 0.8f, x + m * 1.5f, y + m * 1.8f, paint)
+                }
             }
             Scenery.HOUSE -> {
                 circle(c, x + m * 0.4f, y + m * 0.4f, m * 2.2f, shadow)
@@ -596,6 +625,55 @@ class RaceView(
                     paint.color = if (k % 2 == 0) Color.parseColor("#FF6D00") else Color.WHITE
                     c.drawRect(x - m * 0.25f, y - m * 2f + k * m, x + m * 0.25f, y - m + k * m, paint)
                 }
+            }
+            Scenery.CACTUS -> {
+                circle(c, x + m * 0.3f, y + m * 0.3f, m * 0.7f, shadow)
+                val g = Color.parseColor("#558B2F")
+                circle(c, x - m * 0.75f, y + m * 0.2f, m * 0.35f, g)
+                circle(c, x + m * 0.7f, y - m * 0.3f, m * 0.35f, g)
+                circle(c, x, y, m * 0.6f, g)
+                circle(c, x - m * 0.15f, y - m * 0.15f, m * 0.3f, Color.parseColor("#7CB342"))
+                circle(c, x + m * 0.1f, y - m * 0.5f, m * 0.12f, Color.parseColor("#F06292"))
+            }
+            Scenery.DUNE -> {
+                oval(c, x, y, m * 3f, m * 2f, Color.parseColor("#E9C37E"))
+                oval(c, x - m * 0.6f, y - m * 0.4f, m * 2f, m * 1.2f, Color.parseColor("#F7DCA6"))
+            }
+            Scenery.BOULDERS -> {
+                circle(c, x + m * 0.3f, y + m * 0.3f, m * 1.1f, shadow)
+                circle(c, x, y, m * 1.1f, Color.parseColor("#A1887F"))
+                circle(c, x + m * 1.1f, y + m * 0.6f, m * 0.6f, Color.parseColor("#8D6E63"))
+                circle(c, x - m * 0.3f, y - m * 0.3f, m * 0.5f, Color.parseColor("#BCAAA4"))
+            }
+            Scenery.GRANDSTAND -> {
+                paint.color = Color.parseColor("#78909C")
+                c.drawRect(x - m * 2.5f, y - m * 4.5f, x + m * 2.5f, y + m * 4.5f, paint)
+                val crowd = intArrayOf(
+                    Color.parseColor("#E53935"), Color.parseColor("#FFEB3B"), Color.parseColor("#1E88E5"),
+                    Color.WHITE, Color.parseColor("#43A047"), Color.parseColor("#FF9800"),
+                )
+                for (row in 0 until 4) for (seat in 0 until 8) {
+                    val hh = hash(h + row, seat)
+                    // Fans bounce up and down as they cheer.
+                    val bob = sin(time * 6f + row + seat) * m * 0.08f
+                    circle(c, x - m * 1.9f + row * m * 1.25f, y - m * 3.9f + seat * m * 1.1f + bob, m * 0.3f,
+                        crowd[((hh ushr 3) and 0x7FFF) % crowd.size])
+                }
+            }
+            Scenery.TYRES -> {
+                for (k in 0 until 3) {
+                    circle(c, x, y - m + k * m, m * 0.5f, Color.parseColor("#212121"))
+                    circle(c, x, y - m + k * m, m * 0.22f, Color.parseColor("#616161"))
+                }
+            }
+            Scenery.FLAG -> {
+                val wave = sin(time * 5f + h) * m * 0.15f
+                for (row in 0 until 2) for (col in 0 until 3) {
+                    paint.color = if ((row + col) % 2 == 0) Color.BLACK else Color.WHITE
+                    c.drawRect(x + col * m * 0.5f, y + row * m * 0.5f + wave * col,
+                        x + (col + 1) * m * 0.5f, y + (row + 1) * m * 0.5f + wave * col, paint)
+                }
+                circle(c, x, y, m * 0.15f, Color.parseColor("#9E9E9E"))
             }
             Scenery.SNOWMAN -> {
                 circle(c, x + m * 0.3f, y + m * 0.3f, m * 0.9f, shadow)
@@ -644,6 +722,12 @@ class RaceView(
                     circle(c, x + m * 1.1f, y - m * 0.6f, m * 0.45f, mud)
                     circle(c, x - m * 1.0f, y + m * 0.7f, m * 0.4f, mud)
                     circle(c, x - m * 0.3f, y - m * 0.3f, m * 0.3f, Color.parseColor("#795548"))
+                }
+                ObstacleKind.SANDPIT -> {
+                    oval(c, x, y, m * 1.6f, m * 1.2f, Color.parseColor("#E8C98A"))
+                    oval(c, x + m * 0.2f, y + m * 0.15f, m * 1.1f, m * 0.8f, Color.parseColor("#D9B370"))
+                    circle(c, x - m * 0.5f, y - m * 0.3f, m * 0.15f, Color.parseColor("#BF9A55"))
+                    circle(c, x + m * 0.6f, y + m * 0.4f, m * 0.12f, Color.parseColor("#BF9A55"))
                 }
                 ObstacleKind.ICE -> {
                     oval(c, x, y, m * 1.5f, m * 1.1f, Color.argb(200, 179, 229, 252))
@@ -715,8 +799,68 @@ class RaceView(
             paint.color = Color.parseColor("#FF6D00")
             c.drawPath(path, paint)
         }
-        VehiclePainter.draw(c, r.type, r.type.widthM * ppm, r.type.lengthM * ppm, r.dist * ppm, time)
+        VehiclePainter.draw(c, r.type, r.type.widthM * ppm, r.type.lengthM * ppm, r.dist * ppm, time,
+            if (r === me) playerColor else r.type.color)
         c.restore()
+    }
+
+    /** Darkens the world, then paints lamp glows, lit windows and headlight beams on top. */
+    private fun drawNightLights(c: Canvas, from: Float, to: Float) {
+        paint.style = Paint.Style.FILL
+        paint.color = Color.argb(150, 5, 10, 40)
+        c.drawRect(-width.toFloat(), -height.toFloat(), width * 2f, height * 2f, paint)
+        val m = ppm
+        val seg = 9f
+        var i = (from / seg).toInt() - 1
+        val sideRoom = (width / 2f) / ppm - ROAD_HALF - 0.6f
+        while (i * seg < to + seg) {
+            for (side in intArrayOf(-1, 1)) {
+                // Same placement maths as drawScenery so the lights line up with the objects.
+                val h = hash(i, side + 7)
+                if ((h and 0xFF) > 190) continue
+                val kind = track.scenery[((h ushr 8) and 0xFF) % track.scenery.size]
+                val near = kind == Scenery.LAMP || kind == Scenery.BARRIER
+                val offset = if (near) 0.9f else 1.8f + ((h ushr 16) and 0xFF) / 255f * max(1f, sideRoom)
+                val x = sx(side * (ROAD_HALF + 0.6f + offset))
+                val y = sy(i * seg + ((h ushr 24) and 0x7F) / 127f * 4f)
+                if (kind == Scenery.LAMP) {
+                    circle(c, x, y, m * 3f, Color.argb(60, 255, 236, 140))
+                    circle(c, x, y, m * 1.4f, Color.argb(90, 255, 241, 170))
+                    circle(c, x, y, m * 0.3f, Color.parseColor("#FFF59D"))
+                } else if (kind == Scenery.BUILDING) {
+                    for (row in 0 until 4) for (col in 0 until 3) {
+                        if ((hash(h, row * 3 + col) and 3) == 0) continue
+                        paint.color = Color.argb(230, 255, 224, 130)
+                        val wx = x - m * 2.2f + col * m * 1.6f
+                        val wy = y - m * 2.8f + row * m * 1.6f
+                        c.drawRect(wx, wy, wx + m * 0.9f, wy + m * 0.9f, paint)
+                    }
+                }
+            }
+            i++
+        }
+        for (r in rivals + me) {
+            val y = sy(r.dist)
+            if (y < -height || y > height * 2) continue
+            c.save()
+            c.translate(sx(r.x), y)
+            c.rotate(Math.toDegrees(atan2(r.vx.toDouble(), max(r.speed, 4f).toDouble())).toFloat())
+            val front = -r.type.lengthM * m / 2
+            val hw = r.type.widthM * m / 2
+            path.reset()
+            path.moveTo(-hw * 0.8f, front)
+            path.lineTo(hw * 0.8f, front)
+            path.lineTo(hw * 2.2f, front - m * 10f)
+            path.lineTo(-hw * 2.2f, front - m * 10f)
+            path.close()
+            paint.color = Color.argb(80, 255, 248, 200)
+            c.drawPath(path, paint)
+            circle(c, -hw * 0.6f, front, m * 0.25f, Color.parseColor("#FFFDE7"))
+            circle(c, hw * 0.6f, front, m * 0.25f, Color.parseColor("#FFFDE7"))
+            circle(c, -hw * 0.6f, -front, m * 0.35f, Color.argb(160, 255, 23, 68))
+            circle(c, hw * 0.6f, -front, m * 0.35f, Color.argb(160, 255, 23, 68))
+            c.restore()
+        }
     }
 
     private fun drawHud(c: Canvas) {
@@ -742,7 +886,8 @@ class RaceView(
             val px = barLeft + (r.dist / raceLength).coerceIn(0f, 1f) * (barRight - barLeft)
             val rad = if (r === me) 11 * dp else 8 * dp
             circle(c, px, barY, rad + 2 * dp, if (r === me) Color.parseColor("#FFEB3B") else Color.WHITE)
-            circle(c, px, barY, rad, if (r.type.color == Color.WHITE) Color.parseColor("#90A4AE") else r.type.color)
+            val dot = if (r === me) playerColor else r.type.color
+            circle(c, px, barY, rad, if (dot == Color.WHITE) Color.parseColor("#90A4AE") else dot)
         }
 
         // Position and coins.
@@ -793,7 +938,8 @@ class RaceView(
             circle(c, w / 2, height * 0.4f, 70 * dp, Color.argb(200, 0, 0, 0))
             outlinedText(c, "$n", w / 2, height * 0.4f + 34 * dp, 96 * dp,
                 when (n) { 3 -> Color.parseColor("#FF1744"); 2 -> Color.parseColor("#FFC400"); else -> Color.parseColor("#00E676") })
-            outlinedText(c, "Drag your finger to steer ↔", w / 2, height * 0.58f, 22 * dp, Color.WHITE)
+            val tip = if (tiltSteering) "Tilt your phone to steer ↔" else "Drag your finger to steer ↔"
+            outlinedText(c, tip, w / 2, height * 0.58f, 22 * dp, Color.WHITE)
         } else if (goFlash > 0f) {
             outlinedText(c, "GO!", w / 2, height * 0.42f, 110 * dp * (1.4f - goFlash * 0.4f), Color.parseColor("#00E676"))
         }

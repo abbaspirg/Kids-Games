@@ -26,7 +26,7 @@ class RaceActivity : BaseGameActivity(), RaceView.Listener {
         raceView?.pause()
         playArea.removeAllViews()
         playArea.setPadding(0, 0, 0, 0)
-        val view = RaceView(this, vehicle, track, this)
+        val view = RaceView(this, vehicle, track, this, Garage.colorOf(this, vehicle), Garage.tiltSteering(this))
         raceView = view
         playArea.addView(view, matchParent())
         if (resumed) view.resume()

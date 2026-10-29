@@ -25,9 +25,18 @@ A top-down, three-lane race against three other vehicles.
 
 Off-road vehicles drive straight through mud and over rocks.
 
-**5 tracks:** City Streets, Highway, Farm Road, Building Site and Snowy
-Mountain. Each has its own scenery and hazards: cones, puddles, oil, mud,
-rocks and slippery ice. The snow track also has less grip.
+**8 tracks:** City Streets, Highway, Farm Road, Building Site, Snowy
+Mountain, Desert Dash, Race Stadium (cheering crowds, tyre walls,
+chequered flags) and Night City (headlight beams, glowing street lamps,
+lit windows). Each has its own scenery and hazards: cones, puddles, oil,
+mud, rocks, sand pits and slippery ice.
+
+**🔧 Garage:** after picking a vehicle, kids paint it in one of 9 colours.
+The colour is remembered and used in the race and in Bus Driver.
+
+**📱 Steering:** choose finger steering (the vehicle follows the finger)
+or tilt steering (tilt the phone like a steering wheel) on the track
+screen.
 
 **What makes it feel real**
 - Vehicles are sized in real metres (a bus really is much longer than a bike).
@@ -40,6 +49,23 @@ rocks and slippery ice. The snow track also has less grip.
 **Made for small hands:** the vehicle accelerates by itself and follows
 the child's finger left and right. There's a spoken 3-2-1-Go countdown,
 and gentle rubber-banding keeps every race close.
+
+## 🚜 JCB Dig & Dump
+
+A side-view building site in landscape. Drag the JCB's digger arm (a
+two-part boom and dipper with hydraulic rams) into the dirt pile to
+scoop, then over the dump truck to tip it in. Three scoops fill a truck,
+which drives away while a new one arrives. Some scoops dig up treasure:
+a dinosaur bone, a gem, a worm or a crown. Tap the JCB to honk.
+
+## 🚌 Bus Driver
+
+The bus drives itself along a city route with 6 bus stops. Hold the
+big red **STOP** pedal to brake:
+- **Bus stops:** stop in the yellow box. The doors open, some riders get off, and the waiting passengers walk on board while the voice counts them.
+- **Traffic lights:** they turn yellow and then red as the bus gets close. Wait at the red light and it turns green ("Green means go!").
+- Oncoming cars, trucks and tractors pass in the other lane.
+- The route ends at the bus depot, with a score for stops served and passengers carried.
 
 ## 🎓 Learning games
 
