@@ -8,6 +8,7 @@ A Halloween-themed snake game for Android, written in Kotlin with no third-party
 - The snake wraps through the edges, so the only way to lose is biting yourself
 - Gets faster as you eat more; your best score is saved
 - On the start screen the snake plays by itself until you tap
+- Sound effects made in code (no audio files): a start jingle, a treat "bloop" that gets higher as you eat, a soft tick when turning, a "wah wah" on game over and a victory fanfare. Tap 🔊 to mute or unmute
 
 ## Controls
 
