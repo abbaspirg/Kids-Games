@@ -12,9 +12,10 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        drawEdgeToEdge()
         gameView = SnakeGameView(this)
         setContentView(gameView)
+        // Must run after setContentView: the insets controller needs the window's decor view.
+        drawEdgeToEdge()
     }
 
     override fun onResume() {
