@@ -64,6 +64,7 @@ class SnakeGameView(context: Context) : View(context) {
     private var foodEmoji = TREATS[0]
     private var score = 0
     private var best = prefs.getInt(KEY_BEST, 0)
+    private val sounds = SoundEffects(context).apply { muted = prefs.getBoolean(KEY_MUTED, false) }
     private var won = false
     private val particles = mutableListOf<Particle>()
 
@@ -84,6 +85,8 @@ class SnakeGameView(context: Context) : View(context) {
     private var touchStartX = 0f
     private var touchStartY = 0f
     private var swipedThisTouch = false
+    private var touchOnMute = false
+    private val muteRect = RectF()
 
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(0xE8, 0xE8, 0xE8) }
@@ -140,6 +143,8 @@ class SnakeGameView(context: Context) : View(context) {
         running = false
         if (state == State.PLAYING) state = State.PAUSED
     }
+
+    fun release() = sounds.release()
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -250,6 +255,8 @@ class SnakeGameView(context: Context) : View(context) {
             burstAt(next)
             if (state == State.PLAYING) {
                 score++
+                // Each treat in a round chirps a little higher than the last.
+                sounds.play(SoundEffects.Sound.EAT, 1f + min(score, 20) * 0.025f)
                 performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             }
             spawnFood()
@@ -257,6 +264,7 @@ class SnakeGameView(context: Context) : View(context) {
     }
 
     private fun endGame() {
+        if (state == State.PLAYING) sounds.play(if (won) SoundEffects.Sound.WIN else SoundEffects.Sound.GAME_OVER)
         state = State.OVER
         pendingTurns.clear()
         fromCells = snake.toList()
@@ -273,20 +281,20 @@ class SnakeGameView(context: Context) : View(context) {
         if (state != State.PLAYING) onTap()
         val last = pendingTurns.lastOrNull() ?: direction
         if (turn == last || turn.isOpposite(last)) return
-        if (pendingTurns.size < 2) pendingTurns.addLast(turn)
+        if (pendingTurns.size < 2) {
+            pendingTurns.addLast(turn)
+            sounds.play(SoundEffects.Sound.TURN)
+        }
     }
 
     private fun onTap() {
         when (state) {
-            State.READY -> {
+            State.READY, State.OVER -> {
                 newGame()
                 state = State.PLAYING
+                sounds.play(SoundEffects.Sound.START)
             }
             State.PAUSED -> state = State.PLAYING
-            State.OVER -> {
-                newGame()
-                state = State.PLAYING
-            }
             State.PLAYING -> Unit
         }
         lastFrameTime = SystemClock.uptimeMillis()
@@ -311,8 +319,10 @@ class SnakeGameView(context: Context) : View(context) {
                 touchStartX = event.x
                 touchStartY = event.y
                 swipedThisTouch = false
+                touchOnMute = muteRect.contains(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
+                if (touchOnMute) return true
                 val dx = event.x - touchStartX
                 val dy = event.y - touchStartY
                 val threshold = 24f * density
@@ -330,13 +340,22 @@ class SnakeGameView(context: Context) : View(context) {
                 }
             }
             MotionEvent.ACTION_UP -> {
-                if (!swipedThisTouch) {
+                if (touchOnMute) {
+                    if (muteRect.contains(event.x, event.y)) toggleMute()
+                } else if (!swipedThisTouch) {
                     onTap()
                     performClick()
                 }
             }
         }
         return true
+    }
+
+    private fun toggleMute() {
+        sounds.muted = !sounds.muted
+        prefs.edit().putBoolean(KEY_MUTED, sounds.muted).apply()
+        if (!sounds.muted) sounds.play(SoundEffects.Sound.EAT)
+        performClick()
     }
 
     override fun performClick(): Boolean {
@@ -482,8 +501,12 @@ class SnakeGameView(context: Context) : View(context) {
         textPaint.textSize = 16f * density
         textPaint.textAlign = Paint.Align.RIGHT
         textPaint.alpha = 160
-        canvas.drawText("BEST $best", boardRect.right - 4f * density, baseline - 4f * density, textPaint)
+        val muteSize = 44f * density
+        muteRect.set(boardRect.right - muteSize, baseline - 32f * density, boardRect.right, baseline - 32f * density + muteSize)
+        canvas.drawText("BEST $best", muteRect.left - 8f * density, baseline - 4f * density, textPaint)
         textPaint.alpha = 255
+        emojiPaint.textSize = 22f * density
+        canvas.drawText(if (sounds.muted) MUTED else SPEAKER, muteRect.centerX(), baseline - 3f * density, emojiPaint)
         emojiPaint.textSize = cellSize * 0.82f
     }
 
@@ -607,6 +630,9 @@ class SnakeGameView(context: Context) : View(context) {
 
     companion object {
         private const val KEY_BEST = "best_score"
+        private const val KEY_MUTED = "muted"
+        private const val SPEAKER = "🔊"
+        private const val MUTED = "🔇"
         private const val PUMPKIN = "🎃"
         private val TREATS = listOf(PUMPKIN, "👻", "🍬")
         private val BACKGROUND = Color.rgb(0xFB, 0xFB, 0xFB)
