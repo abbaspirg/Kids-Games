@@ -661,10 +661,108 @@ ws.column_dimensions["K"].width = 10
 ws["A22"] = "Note: 'Own Cost Est.' per client uses each own worker's cost/hour (Workers col V); Gross Profit at left uses actual payroll."
 ws["A22"].font = F_SUB
 
+# ================================================================ HOME (menu UI)
+ws = wb.create_sheet("HOME", 0)
+ws.sheet_view.showGridLines = False
+ws.sheet_view.zoomScale = 110
+for col in "ABCDEFGHIJKLM":
+    ws.column_dimensions[col].width = 3 if col in "AEIM" else 15
+ws.column_dimensions["A"].width = 2
+ws["B1"] = f"={S_COMPANY}"
+ws["B1"].font = Font(name=FONT, size=20, bold=True, color="1F3864")
+ws["B2"] = '="Manpower Management System   |   Payroll month: "&TEXT(Settings!$B$8,"mmmm yyyy")'
+ws["B2"].font = Font(name=FONT, size=11, color="595959")
+
+# KPI strip
+kpi_tiles = [("Client Billing (AED)", "=Dashboard!$B$4", AED), ("Gross Profit (AED)", "=Dashboard!$B$7", AED),
+             ("Net Salary to Pay - WPS (AED)", "=Dashboard!$B$15", AED)]
+for i, (lab, f, fmt) in enumerate(kpi_tiles):
+    col = [2, 6, 10][i]
+    for rr in (4, 5):
+        ws.merge_cells(start_row=rr, start_column=col, end_row=rr, end_column=col + 2)
+        for cc in range(col, col + 3):
+            ws.cell(row=rr, column=cc).fill = PatternFill("solid", fgColor="F2F2F2")
+    a = ws.cell(row=4, column=col, value=lab)
+    a.font = Font(name=FONT, size=9, color="595959")
+    a.alignment = Alignment(horizontal="center")
+    v = ws.cell(row=5, column=col, value=f)
+    v.font = Font(name=FONT, size=16, bold=True, color="1F3864")
+    v.number_format = fmt
+    v.alignment = Alignment(horizontal="center")
+alert = ws.cell(row=6, column=2, value='=IF(Dashboard!$B$18+Dashboard!$B$19=0,"All visas / Emirates IDs OK",'
+                '"WARNING: "&Dashboard!$B$18&" documents EXPIRED, "&Dashboard!$B$19&" expiring soon - open Workers")')
+alert.font = Font(name=FONT, size=10, bold=True, color="C00000")
+alert.hyperlink = "#'Workers'!A1"
+ws.row_dimensions[5].height = 28
+
+# Menu tiles: (section, colour, [(label, sheet, hint)])
+menu = [
+    ("1. ENTER DATA", "2E75B6", [("Timesheet", "Timesheet", "Client hours each month"),
+                                 ("Deductions", "Deductions", "Advances, fines"),
+                                 ("Workers", "Workers", "Add / edit workers")]),
+    ("2. MASTER DATA", "7030A0", [("Clients", "Clients", "Customers"),
+                                  ("Suppliers", "Suppliers", "Manpower agencies"),
+                                  ("Client Rates", "ClientRates", "Selling rate / hr")]),
+    ("", "7030A0", [("Supplier Rates", "SupplierRates", "Cost rate / hr"),
+                    ("Settings", "Settings", "Month, OT, VAT"),
+                    ("Help", "README", "How it works")]),
+    ("3. REPORTS & PRINT", "548235", [("Dashboard", "Dashboard", "Profit & KPIs"),
+                                      ("Payroll", "Payroll", "Salary sheet"),
+                                      ("Payslip", "Payslip", "Print payslip")]),
+    ("", "548235", [("Client Invoice", "ClientInvoice", "Tax invoice"),
+                    ("Supplier Payment", "SupplierStatement", "Amount payable"),
+                    ("WPS File", "WPS_SIF", "Bank salary file")]),
+]
+row = 8
+for section, colour, items in menu:
+    if section:
+        ws.cell(row=row, column=2, value=section).font = Font(name=FONT, size=11, bold=True, color=colour)
+        row += 1
+    for i, (label, sheet, hint) in enumerate(items):
+        col = [2, 6, 10][i]
+        ws.merge_cells(start_row=row, start_column=col, end_row=row + 1, end_column=col + 2)
+        c = ws.cell(row=row, column=col, value=label)
+        c.hyperlink = f"#'{sheet}'!A1"
+        c.font = Font(name=FONT, size=13, bold=True, color="FFFFFF")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+        for rr in (row, row + 1):
+            for cc in range(col, col + 3):
+                ws.cell(row=rr, column=cc).fill = PatternFill("solid", fgColor=colour)
+        h = ws.cell(row=row + 2, column=col, value=hint)
+        h.font = Font(name=FONT, size=8, italic=True, color="7F7F7F")
+    row += 4
+ws.cell(row=row, column=2, value="Click any tile to open. Every sheet has a  « HOME  link at the top right to come back.").font = F_SUB
+
+# "« HOME" link on every other sheet (placed right of the title so it doesn't hide it)
+home_pos = {"Payslip": "E1", "ClientInvoice": "I1", "Dashboard": "D1", "Settings": "D1"}
+
+
+def home_cell(s):
+    if s.title in home_pos:
+        return home_pos[s.title]
+    need = len(str(s["A1"].value or "")) * 1.6 + 4
+    acc, col = 0, 1
+    while acc < need:
+        acc += s.column_dimensions[get_column_letter(col)].width or 8.43
+        col += 1
+    return f"{get_column_letter(col)}1"
+
+
+for s in wb.worksheets:
+    if s.title == "HOME":
+        continue
+    c = s[home_cell(s)]
+    c.value = "« HOME"
+    c.hyperlink = "#'HOME'!A1"
+    c.font = Font(name=FONT, size=10, bold=True, color="FFFFFF", underline="single")
+    c.fill = PatternFill("solid", fgColor="C00000")
+    c.alignment = Alignment(horizontal="center", vertical="center")
+wb.active = 0
+
 # ---------------------------------------------------------------- finish
 for s in wb.worksheets:
     s.sheet_view.showGridLines = s.title in ("Settings",)
-    s.sheet_properties.tabColor = {"README": "7F7F7F", "Dashboard": "C00000", "Payroll": "548235",
+    s.sheet_properties.tabColor = {"HOME": "C00000", "README": "7F7F7F", "Dashboard": "C00000", "Payroll": "548235",
                                    "Payslip": "548235", "ClientInvoice": "548235",
                                    "SupplierStatement": "548235", "WPS_SIF": "548235"}.get(s.title, "1F3864")
 wb.save(OUT)
