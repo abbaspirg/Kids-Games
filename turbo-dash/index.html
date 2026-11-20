@@ -71,6 +71,7 @@
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
 // ---------- layout ----------
 let W = 0, H = 0, DPR = 1;
@@ -105,7 +106,7 @@ function rrect(x, y, w, h, r) {
 }
 
 // ---------- sound (tiny synth, no files) ----------
-let actx = null, muted = localStorage.getItem('td_muted') === '1';
+let actx = null, muted = store.get('td_muted') === '1';
 function beep(freq, dur = 0.1, type = 'square', vol = 0.12, slide = 0) {
   if (muted) return;
   try {
@@ -138,8 +139,8 @@ const THEME_EVERY = 1500; // meters per zone
 
 // ---------- state ----------
 const CAR_COLORS = ['#ff3b3b', '#2f8cff', '#ffcc00', '#2ecc71', '#b05cff', '#ff8c1a'];
-let myColor = localStorage.getItem('td_color') || CAR_COLORS[0];
-let best = +localStorage.getItem('td_best') || 0;
+let myColor = store.get('td_color') || CAR_COLORS[0];
+let best = +store.get('td_best') || 0;
 let state = 'menu'; // menu | play | pause | over
 let player = null, traffic = [], items = [], decos = [], parts = [], floaters = [];
 let speed, dist, coins, hearts, invuln, shield, spawnT, itemT, shake, laneOffset, zone, zoneBanner, time;
@@ -549,7 +550,7 @@ function gameOver() {
   state = 'over';
   const score = Math.floor(dist) + coins * 10;
   const isBest = score > best;
-  if (isBest) { best = score; localStorage.setItem('td_best', best); }
+  if (isBest) { best = score; store.set('td_best', best); }
   $('finalScore').textContent = `Score: ${score}`;
   $('finalBest').innerHTML = `${Math.floor(dist)} m driven · ${coins} coins<br>` + (isBest ? '🏆 NEW BEST SCORE! 🏆' : `Best: ${best}`);
   $('hudBtns').classList.add('hidden');
@@ -560,14 +561,14 @@ $('startBtn').onclick = start;
 $('againBtn').onclick = start;
 $('resumeBtn').onclick = resume;
 $('pauseBtn').onclick = pause;
-$('muteBtn').onclick = () => { muted = !muted; localStorage.setItem('td_muted', muted ? '1' : '0'); $('muteBtn').textContent = muted ? '🔇' : '🔊'; };
+$('muteBtn').onclick = () => { muted = !muted; store.set('td_muted', muted ? '1' : '0'); $('muteBtn').textContent = muted ? '🔇' : '🔊'; };
 $('muteBtn').textContent = muted ? '🔇' : '🔊';
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 const colorsEl = $('colors');
 for (const c of CAR_COLORS) {
   const d = document.createElement('div'); d.style.background = c; if (c === myColor) d.className = 'sel';
-  d.onclick = () => { myColor = c; localStorage.setItem('td_color', c); [...colorsEl.children].forEach(x => x.className = ''); d.className = 'sel'; if (player) player.color = c; };
+  d.onclick = () => { myColor = c; store.set('td_color', c); [...colorsEl.children].forEach(x => x.className = ''); d.className = 'sel'; if (player) player.color = c; };
   colorsEl.appendChild(d);
 }
 if (best) $('bestStart').textContent = `🏆 Best score: ${best}`;
