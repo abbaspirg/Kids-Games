@@ -279,3 +279,24 @@ textarea.backup {
   background: #322f35; color: #f5eff7; padding: 12px 20px;
   border-radius: 12px; z-index: 60; font-size: .9rem; max-width: 90%; text-align: center;
 }
+
+/* ---------- exercise figures ---------- */
+.fig { width: 100%; height: auto; display: block; color: var(--primary); }
+.fig-limb { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.fig-limb.far { opacity: .4; }
+.fig-head { fill: currentColor; }
+.fig-floor { stroke: var(--muted); stroke-width: 2; opacity: .35; stroke-linecap: round; }
+.ex .fig-chip { width: 72px; padding: 6px 4px; }
+.ex .fig-chip .fig { color: var(--text); opacity: .8; }
+.demo { width: 100%; max-width: 360px; border-radius: 28px; padding: 14px 18px 8px; }
+.demo.small { max-width: 240px; margin-top: 14px; padding: 10px 14px 4px; }
+.demo .fig { color: var(--text); }
+.big-ring { width: 190px; height: 190px; margin: 16px auto 4px; }
+.big-ring svg { width: 190px; height: 190px; }
+.howto { background: var(--surface); border-radius: 24px; padding: 18px; margin-top: 16px; text-align: left; }
+.howto h4 { margin: 0 0 8px; font-weight: 500; font-size: 1.05rem; }
+.howto ol { margin: 0; padding-left: 20px; line-height: 1.5; }
+.howto li { margin-bottom: 6px; }
+.howto .mistake { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: var(--red-c); font-size: .9rem; line-height: 1.45; }
+.howto .easier { margin-top: 8px; color: var(--muted); font-size: .88rem; line-height: 1.45; }
+.pl-name { margin-top: 10px; }

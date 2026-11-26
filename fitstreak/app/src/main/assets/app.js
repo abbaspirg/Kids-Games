@@ -218,6 +218,144 @@
   // soft tinted background per exercise, like category chips
   const TINT = { pushups: 'green', squats: 'blue', lunges: 'orange', jacks: 'yellow', climbers: 'teal', plank: 'purple', sideplank: 'pink' };
 
+  // ---------------------------------------------------------------- how-to guides
+  const HOWTO = {
+    pushups: {
+      steps: [
+        'Hands on the floor slightly wider than your shoulders, fingers pointing forward.',
+        'Body in one straight line from head to heels — squeeze your glutes and tighten your stomach.',
+        'Bend your elbows (about 45° from your body) and lower until your chest is a fist above the floor.',
+        'Push the floor away and straighten your arms fully.'
+      ],
+      mistake: 'Hips sagging or butt sticking up, and elbows flaring straight out to the sides.',
+      easier: 'Too hard? Do them with your knees on the floor.'
+    },
+    squats: {
+      steps: [
+        'Feet shoulder-width apart, toes turned slightly out.',
+        'Push your hips back and down, as if sitting on a chair. Arms forward for balance.',
+        'Go down until your thighs are parallel to the floor. Keep your heels down and chest up.',
+        'Drive through your heels to stand up tall.'
+      ],
+      mistake: 'Knees caving inward, heels lifting, or rounding your back.',
+      easier: 'Too hard? Squat down to a chair and stand back up.'
+    },
+    lunges: {
+      steps: [
+        'Stand tall, hands on your hips.',
+        'Take a big step forward with one leg.',
+        'Lower your hips until both knees are bent at 90°; the back knee hovers just above the floor.',
+        'Push through the front heel to step back. Do all reps on one leg, then switch.'
+      ],
+      mistake: 'Front knee pushing far past the toes, or leaning your upper body forward.',
+      easier: 'Too hard? Hold a wall or chair for balance and don\'t go as low.'
+    },
+    jacks: {
+      steps: [
+        'Stand with feet together and arms at your sides.',
+        'Jump your feet out wider than your shoulders while swinging your arms overhead.',
+        'Jump back to the start position.',
+        'Land softly on the balls of your feet and keep a steady rhythm.'
+      ],
+      mistake: 'Landing hard on your heels or locking your knees.',
+      easier: 'Low impact: step one foot out at a time instead of jumping.'
+    },
+    climbers: {
+      steps: [
+        'Start in a high plank: hands under your shoulders, body straight.',
+        'Drive one knee towards your chest.',
+        'Switch legs quickly, like running in place.',
+        'Keep your hips low and level the whole time. Each knee drive = 1 rep.'
+      ],
+      mistake: 'Hips bouncing up high, or hands drifting in front of the shoulders.',
+      easier: 'Too hard? Go slower and step each foot in instead of jumping.'
+    },
+    plank: {
+      steps: [
+        'Forearms on the floor, elbows directly under your shoulders.',
+        'Step your feet back so your body forms a straight line from head to heels.',
+        'Squeeze your glutes, pull your belly button in, and look at the floor.',
+        'Breathe slowly and hold.'
+      ],
+      mistake: 'Hips sagging toward the floor or pushed up high, or holding your breath.',
+      easier: 'Too hard? Rest your knees on the floor and keep the line from knees to head.'
+    },
+    sideplank: {
+      steps: [
+        'Lie on your side, elbow directly under your shoulder, forearm on the floor.',
+        'Stack your feet (or put one in front of the other).',
+        'Lift your hips until your body is a straight line from head to feet.',
+        'Top hand on your hip or reaching up. Hold, then switch sides.'
+      ],
+      mistake: 'Hips dropping toward the floor or the shoulder shrugging up to the ear.',
+      easier: 'Too hard? Keep your bottom knee on the floor.'
+    }
+  };
+
+  // ---------------------------------------------------------------- exercise animations
+  // A simple figure drawn from joint positions; SVG animates between the key poses.
+  // Joints: h=head, n=neck/shoulder, p=hip, eL/hL eR/hR = elbows/hands, kL/fL kR/fR = knees/feet.
+  // "L" limbs are the far side (drawn faded) unless front view.
+  const POSES = {
+    pushups: { dur: 2.4, frames: [
+      { h: [154, 60], n: [142, 65], p: [90, 85], eL: [141, 86], hL: [140, 108], eR: [141, 86], hR: [140, 108], kL: [60, 97], fL: [30, 108], kR: [60, 97], fR: [30, 108] },
+      { h: [152, 89], n: [140, 92], p: [86, 100], eL: [124, 99], hL: [140, 108], eR: [124, 99], hR: [140, 108], kL: [58, 104], fL: [30, 108], kR: [58, 104], fR: [30, 108] }
+    ] },
+    squats: { dur: 2.4, frames: [
+      { h: [100, 12], n: [100, 26], p: [100, 56], eL: [106, 40], hL: [112, 53], eR: [106, 40], hR: [112, 53], kL: [99, 82], fL: [100, 108], kR: [99, 82], fR: [100, 108] },
+      { h: [109, 42], n: [102, 54], p: [86, 82], eL: [120, 56], hL: [140, 54], eR: [120, 56], hR: [140, 54], kL: [114, 86], fL: [100, 108], kR: [114, 86], fR: [100, 108] }
+    ] },
+    lunges: { dur: 2.6, frames: [
+      { h: [100, 10], n: [100, 24], p: [100, 54], eL: [88, 38], hL: [97, 52], eR: [88, 38], hR: [97, 52], kL: [97, 81], fL: [93, 108], kR: [103, 81], fR: [105, 108] },
+      { h: [100, 34], n: [100, 48], p: [100, 78], eL: [88, 62], hL: [97, 76], eR: [88, 62], hR: [97, 76], kL: [90, 104], fL: [66, 107], kR: [127, 80], fR: [128, 108] }
+    ] },
+    jacks: { dur: 1.1, front: true, frames: [
+      { h: [100, 14], n: [100, 28], p: [100, 64], eL: [93, 46], hL: [91, 64], eR: [107, 46], hR: [109, 64], kL: [98, 86], fL: [96, 108], kR: [102, 86], fR: [104, 108] },
+      { h: [100, 12], n: [100, 26], p: [100, 62], eL: [85, 14], hL: [77, 3], eR: [115, 14], hR: [123, 3], kL: [89, 84], fL: [78, 106], kR: [111, 84], fR: [122, 106] }
+    ] },
+    climbers: { dur: 1.0, frames: [
+      { h: [154, 60], n: [142, 65], p: [94, 80], eL: [141, 86], hL: [140, 108], eR: [141, 86], hR: [140, 108], kL: [120, 90], fL: [102, 104], kR: [64, 94], fR: [34, 108] },
+      { h: [154, 60], n: [142, 65], p: [94, 80], eL: [141, 86], hL: [140, 108], eR: [141, 86], hR: [140, 108], kL: [64, 94], fL: [34, 108], kR: [120, 90], fR: [102, 104] }
+    ] },
+    plank: { dur: 3, frames: [
+      { h: [150, 80], n: [138, 85], p: [86, 95], eL: [137, 108], hL: [160, 108], eR: [137, 108], hR: [160, 108], kL: [58, 101], fL: [30, 108], kR: [58, 101], fR: [30, 108] },
+      { h: [150, 79], n: [138, 84], p: [86, 94], eL: [137, 108], hL: [160, 108], eR: [137, 108], hR: [160, 108], kL: [58, 101], fL: [30, 108], kR: [58, 101], fR: [30, 108] }
+    ] },
+    sideplank: { dur: 3, front: true, frames: [
+      { h: [145, 63], n: [134, 72], p: [86, 90], eL: [136, 50], hL: [138, 28], eR: [134, 106], hR: [156, 107], kL: [60, 99], fL: [34, 108], kR: [60, 99], fR: [34, 108] },
+      { h: [145, 62], n: [134, 71], p: [86, 88], eL: [137, 49], hL: [140, 27], eR: [134, 106], hR: [156, 107], kL: [60, 99], fL: [34, 108], kR: [60, 99], fR: [34, 108] }
+    ] }
+  };
+
+  const LIMBS = [['armL', ['n', 'eL', 'hL']], ['legL', ['p', 'kL', 'fL']], ['torso', ['n', 'p']], ['legR', ['p', 'kR', 'fR']], ['armR', ['n', 'eR', 'hR']]];
+
+  function figure(id, animate) {
+    const def = POSES[id];
+    if (!def) return '';
+    const fr = def.frames;
+    const pts = (f, keys) => keys.map(k => f[k].join(',')).join(' ');
+    const anim = (attr, a, b) => animate
+      ? '<animate attributeName="' + attr + '" values="' + a + ';' + b + ';' + a + '" dur="' + def.dur + 's" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>'
+      : '';
+    let g = '<line class="fig-floor" x1="4" y1="113" x2="196" y2="113"/>';
+    for (const [name, keys] of LIMBS) {
+      const far = !def.front && name.endsWith('L');
+      g += '<polyline class="fig-limb' + (far ? ' far' : '') + '" points="' + pts(fr[0], keys) + '">' +
+        anim('points', pts(fr[0], keys), pts(fr[1], keys)) + '</polyline>';
+    }
+    g += '<circle class="fig-head" cx="' + fr[0].h[0] + '" cy="' + fr[0].h[1] + '" r="9">' +
+      anim('cx', fr[0].h[0], fr[1].h[0]) + anim('cy', fr[0].h[1], fr[1].h[1]) + '</circle>';
+    return '<svg class="fig" viewBox="0 0 200 118" aria-hidden="true">' + g + '</svg>';
+  }
+
+  function howtoHtml(id) {
+    const h = HOWTO[id];
+    if (!h) return '';
+    return '<div class="howto"><h4>How to do it</h4><ol>' + h.steps.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' +
+      '<div class="mistake"><b>⚠️ Avoid:</b> ' + esc(h.mistake) + '</div>' +
+      '<div class="easier"><b>💡</b> ' + esc(h.easier) + '</div></div>';
+  }
+
   // ---------------------------------------------------------------- dialog
   // In-app replacement for confirm(): Android WebView does not show browser dialogs.
   let dialogResolve = null;
@@ -309,7 +447,7 @@
     for (const e of S.plan) {
       const d = isDone(t, e.id);
       html += '<div class="ex ' + (d ? 'done' : '') + '" data-act="open" data-id="' + e.id + '">' +
-        '<div class="ico tint-' + (TINT[e.id] || 'purple') + '">' + e.icon + '</div>' +
+        '<div class="ico fig-chip tint-' + (TINT[e.id] || 'purple') + '">' + (POSES[e.id] ? figure(e.id, false) : e.icon) + '</div>' +
         '<div class="info"><div class="name">' + esc(e.name) + '</div>' +
         '<div class="tgt">' + esc(e.ml) + ' &nbsp;•&nbsp; ' + targetText(e) + '</div></div>' +
         '<button class="chk" data-act="toggle" data-id="' + e.id + '" aria-label="mark done">' + svg('check', 22) + '</button></div>';
@@ -498,20 +636,20 @@
     const frac = isTime ? (P.remaining / e.target) : Math.min(1, P.count / e.target);
     const html =
       '<div class="pl"><div class="pl-top"><button class="x" data-act="close">✕</button>' + dotsHtml() + '</div>' +
-      '<div class="pl-body"><div class="pl-ico">' + e.icon + '</div>' +
+      '<div class="pl-body"><div class="demo tint-' + (TINT[e.id] || 'purple') + '">' + (POSES[e.id] ? figure(e.id, true) : '<div class="pl-ico">' + e.icon + '</div>') + '</div>' +
       '<div class="pl-name">' + esc(e.name) + '</div><div class="ml">' + esc(e.ml) + '</div>' +
       (s.side ? '<div class="pl-side">' + s.side + '</div>' : '') +
       '<div class="big-ring ' + (isTime ? '' : 'tap') + (!isTime && P.count >= e.target ? ' hit' : '') + '" id="bigRing" ' + (isTime ? '' : 'data-act="count"') + '>' +
       ringSvg(230, 100, frac) +
       '<div class="num"><b id="pNum">' + (isTime ? P.remaining : P.count) + '</b><span>' +
       (isTime ? 'seconds' : 'of ' + e.target + ' · tap to count') + '</span></div></div>' +
-      '<div class="pl-tip">' + esc(e.tip) + '</div></div>' +
+      '</div>' +
       '<div class="pl-actions">' +
       (isTime
         ? '<button class="btn primary" data-act="timer" id="timerBtn">' + (P.timer ? '⏸ Pause' : (P.remaining < e.target ? '▶ Resume' : '▶ Start timer')) + '</button>' +
           '<button class="btn ghost" data-act="finish">Done ✓</button>'
         : '<button class="btn green" data-act="finish">Done ✓ ' + e.target + ' reps</button>') +
-      '</div></div>';
+      '</div>' + (HOWTO[e.id] ? howtoHtml(e.id) : '<div class="pl-tip">' + esc(e.tip || '') + '</div>') + '</div>';
     $('#player').innerHTML = html;
   }
 
@@ -582,6 +720,7 @@
     $('#player').innerHTML =
       '<div class="pl"><div class="pl-top"><button class="x" data-act="close">✕</button>' + dotsHtml() + '</div>' +
       '<div class="pl-body"><div class="rest-title">' + (switching ? '🔄 Switch sides' : '😮‍💨 Rest') + '</div>' +
+      (POSES[e.id] ? '<div class="demo small tint-' + (TINT[e.id] || 'purple') + '">' + figure(e.id, true) + '</div>' : '') +
       '<div class="big-ring rest" id="bigRing">' + ringSvg(230, 100, 1) +
       '<div class="num"><b id="pNum">' + sec + '</b><span>seconds</span></div></div>' +
       '<div class="next-up">Next up: <b>' + e.icon + ' ' + esc(e.name) + (s.side ? ' · ' + s.side : '') + '</b> — ' + targetText(e) + '</div></div>' +
