@@ -357,6 +357,66 @@
       '<div class="easier"><b>💡</b> ' + esc(h.easier) + '</div></div>';
   }
 
+  // ---------------------------------------------------------------- exercise editor
+  const ICON_CHOICES = ['💪', '🦵', '🚶', '⭐', '⛰️', '🧱', '📐', '🏃', '🚴', '🧘', '🤸', '🏋️', '🥊', '🦶', '🙌', '🔥', '⚡', '❤️', '🎯', '⏱️'];
+  let ED = null;
+
+  function openEditor(id) {
+    const e = id ? S.plan.find(x => x.id === id) : null;
+    ED = e ? { id: e.id, icon: e.icon, type: e.type } : { id: null, icon: '🏃', type: 'reps' };
+    const builtIn = e && HOWTO[e.id];
+    const d = $('#dialog');
+    d.innerHTML = '<div class="dlg editor"><h3>' + (e ? 'Edit exercise' : 'Add exercise') + '</h3>' +
+      '<label class="fld">Name<input id="edName" type="text" maxlength="30" placeholder="e.g. Burpees" value="' + (e ? esc(e.name) : '') + '"></label>' +
+      '<div class="fld">Icon<div class="icon-pick">' + ICON_CHOICES.map(ic =>
+        '<button data-act="ed-icon" data-icon="' + ic + '" class="' + (ic === ED.icon ? 'on' : '') + '">' + ic + '</button>').join('') + '</div></div>' +
+      '<div class="fld">Type<div class="seg">' +
+      '<button data-act="ed-type" data-type="reps" class="' + (ED.type === 'reps' ? 'on' : '') + '">Reps</button>' +
+      '<button data-act="ed-type" data-type="time" class="' + (ED.type === 'time' ? 'on' : '') + '">Time</button></div></div>' +
+      '<div class="fld-row"><label class="fld">Target<span class="tgt-in"><input id="edTarget" type="number" min="1" max="999" inputmode="numeric" value="' + (e ? e.target : 20) + '">' +
+      '<span id="edUnit">' + (ED.type === 'time' ? 'seconds' : 'reps') + '</span></span></label>' +
+      '<div class="fld side-sw">Each side<label class="switch"><input id="edSides" type="checkbox"' + (e && e.sides === 2 ? ' checked' : '') + '><span></span></label></div></div>' +
+      (builtIn ? '<p class="muted small-note">✓ Includes animated demo and form guide</p>'
+        : '<label class="fld">How to do it (optional)<textarea id="edTip" maxlength="300" rows="3" placeholder="Notes on correct form">' + (e && e.tip ? esc(e.tip) : '') + '</textarea></label>') +
+      '<div class="dlg-btns"><button class="tbtn" data-act="dlg-no">Cancel</button><button class="tbtn primary" data-act="ed-save">Save</button></div></div>';
+    d.classList.remove('hidden');
+    dialogResolve = null;
+    if (!e) setTimeout(() => $('#edName').focus(), 50);
+  }
+
+  function saveEditor() {
+    const name = $('#edName').value.trim();
+    const target = Math.round(Number($('#edTarget').value));
+    if (!name) { toast('Please enter a name'); $('#edName').focus(); return; }
+    if (!(target >= 1 && target <= 999)) { toast('Target must be between 1 and 999'); $('#edTarget').focus(); return; }
+    const sides = $('#edSides').checked ? 2 : 1;
+    const tipEl = $('#edTip');
+    let e = ED.id ? S.plan.find(x => x.id === ED.id) : null;
+    if (!e) {
+      e = { id: 'c' + Date.now().toString(36), tip: '' };
+      S.plan.push(e);
+    }
+    Object.assign(e, { name: name, icon: ED.icon, type: ED.type, target: target, sides: sides });
+    if (tipEl) e.tip = tipEl.value.trim();
+    const isNew = !ED.id;
+    ED = null;
+    closeDialog(false);
+    planChanged();
+    toast(isNew ? name + ' added 💪' : name + ' updated');
+  }
+
+  // Today's progress must follow the current exercise list.
+  function planChanged() {
+    const r = rec(today());
+    if (r) {
+      const was = r.complete;
+      r.complete = S.plan.every(x => r.done[x.id]);
+      if (r.complete && !was) r.at = Date.now();
+      if (!r.complete) delete r.at;
+    }
+    save(); render();
+  }
+
   // ---------------------------------------------------------------- dialog
   // In-app replacement for confirm(): Android WebView does not show browser dialogs.
   let dialogResolve = null;
@@ -539,14 +599,19 @@
       (app ? '' : '<p class="muted" style="font-size:.8rem;margin:8px 0 0">Reminders work in the Android app.</p>') +
       '</div>';
 
-    html += '<h2>Workout targets</h2><div class="card">';
-    for (const e of S.plan) {
-      html += '<div class="set-row"><label>' + e.icon + ' ' + esc(e.name) + '<br><span class="ml">' +
-        (e.type === 'time' ? 'seconds' : 'reps') + (e.sides === 2 ? ' · each side' : '') + '</span></label>' +
-        '<input type="number" min="1" max="999" inputmode="numeric" data-target="' + e.id + '" value="' + e.target + '"></div>';
-    }
-    html += '<div class="btn-row"><button class="btn small ghost" data-act="levelup">⬆️ Level up (+10%)</button>' +
-      '<button class="btn small ghost" data-act="defaults">↺ Default targets</button></div></div>';
+    html += '<div class="sec-head"><h2>My workout</h2><span class="muted">' + S.plan.length + ' exercises</span></div><div class="card">';
+    S.plan.forEach((e, i) => {
+      html += '<div class="plan-row">' +
+        '<div class="order"><button data-act="move" data-id="' + e.id + '" data-d="-1"' + (i === 0 ? ' disabled' : '') + ' aria-label="move up">▲</button>' +
+        '<button data-act="move" data-id="' + e.id + '" data-d="1"' + (i === S.plan.length - 1 ? ' disabled' : '') + ' aria-label="move down">▼</button></div>' +
+        '<div class="plan-ico">' + esc(e.icon) + '</div>' +
+        '<div class="plan-info" data-act="edit" data-id="' + e.id + '"><div>' + esc(e.name) + '</div><span class="ml">' + targetText(e) + '</span></div>' +
+        '<button class="icon-btn" data-act="edit" data-id="' + e.id + '" aria-label="edit">✏️</button>' +
+        '<button class="icon-btn" data-act="del" data-id="' + e.id + '" aria-label="delete">🗑️</button></div>';
+    });
+    html += '<button class="btn primary" data-act="add">＋ Add exercise</button>' +
+      '<div class="btn-row" style="margin-top:12px"><button class="btn small ghost" data-act="levelup">⬆️ Level up (+10%)</button>' +
+      '<button class="btn small ghost" data-act="defaults">↺ Reset to default workout</button></div></div>';
 
     html += '<h2>Workout</h2><div class="card">' +
       '<div class="set-row"><label>Rest between exercises</label><select data-set="rest">' +
@@ -650,7 +715,7 @@
         ? '<button class="btn primary" data-act="timer" id="timerBtn">' + (P.timer ? '⏸ Pause' : (P.remaining < e.target ? '▶ Resume' : '▶ Start timer')) + '</button>' +
           '<button class="btn ghost" data-act="finish">Done ✓</button>'
         : '<button class="btn green" data-act="finish">Done ✓ ' + e.target + ' reps</button>') +
-      '</div>' + (HOWTO[e.id] ? howtoHtml(e.id) : '<div class="pl-tip">' + esc(e.tip || '') + '</div>') + '</div>';
+      '</div>' + (HOWTO[e.id] ? howtoHtml(e.id) : (e.tip ? '<div class="howto"><h4>How to do it</h4><p class="note">' + esc(e.tip) + '</p></div>' : '')) + '</div>';
     $('#player').innerHTML = html;
   }
 
@@ -809,9 +874,41 @@
         save(); render(); toast('Targets increased! 💪 Level up!');
         break;
       case 'defaults':
-        S.plan.forEach(e => { e.target = DEFAULT_PLAN.find(d => d.id === e.id).target; });
-        save(); render(); toast('Default targets restored');
+        ask('Reset workout?', 'Your exercise list will go back to the original 7 exercises with default targets. Your history is kept.', 'Reset', true).then(ok => {
+          if (!ok) return;
+          S.plan = DEFAULT_PLAN.map(e => Object.assign({}, e));
+          planChanged(); toast('Default workout restored');
+        });
         break;
+      case 'add': openEditor(null); break;
+      case 'edit': openEditor(id); break;
+      case 'del': {
+        const e = S.plan.find(x => x.id === id);
+        if (S.plan.length <= 1) { toast('You need at least one exercise'); break; }
+        ask('Delete ' + e.name + '?', 'It will be removed from your daily workout. Past history is kept.', 'Delete', true).then(ok => {
+          if (!ok) return;
+          S.plan = S.plan.filter(x => x.id !== id);
+          planChanged(); toast(e.name + ' deleted');
+        });
+        break;
+      }
+      case 'move': {
+        const i = S.plan.findIndex(x => x.id === id), j = i + Number(t.dataset.d);
+        if (j < 0 || j >= S.plan.length) break;
+        const tmp = S.plan[i]; S.plan[i] = S.plan[j]; S.plan[j] = tmp;
+        save(); render();
+        break;
+      }
+      case 'ed-icon':
+        ED.icon = t.dataset.icon;
+        document.querySelectorAll('.icon-pick button').forEach(b => b.classList.toggle('on', b === t));
+        break;
+      case 'ed-type':
+        ED.type = t.dataset.type;
+        document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b === t));
+        $('#edUnit').textContent = ED.type === 'time' ? 'seconds' : 'reps';
+        break;
+      case 'ed-save': saveEditor(); break;
       case 'export':
         $('#backupBox').value = JSON.stringify(S);
         break;
@@ -856,11 +953,6 @@
       if (k === 'remTime' && !t.value) S.settings.remTime = '06:30';
       save();
       if (k === 'remOn' || k === 'remTime' || k === 'eveningOn') { pushReminders(); toast('Reminder updated ⏰'); }
-    } else if (t.dataset.target) {
-      const e = S.plan.find(x => x.id === t.dataset.target);
-      const v = Math.round(Number(t.value));
-      if (v >= 1 && v <= 999) { e.target = v; save(); toast(e.name + ': ' + targetText(e)); }
-      else t.value = e.target;
     }
   });
 

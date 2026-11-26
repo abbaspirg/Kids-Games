@@ -300,3 +300,37 @@ textarea.backup {
 .howto .mistake { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: var(--red-c); font-size: .9rem; line-height: 1.45; }
 .howto .easier { margin-top: 8px; color: var(--muted); font-size: .88rem; line-height: 1.45; }
 .pl-name { margin-top: 10px; }
+
+/* ---------- workout editor ---------- */
+.plan-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.plan-row:last-of-type { border-bottom: 0; }
+.order { display: flex; flex-direction: column; gap: 2px; }
+.order button { font-size: .7rem; width: 28px; height: 22px; border-radius: 8px; color: var(--muted); background: var(--surface2); }
+.order button:disabled { opacity: .3; }
+.plan-ico { font-size: 1.5rem; width: 32px; text-align: center; }
+.plan-info { flex: 1; min-width: 0; }
+.plan-info div { font-size: 1rem; }
+.icon-btn { width: 40px; height: 40px; border-radius: 50%; font-size: 1.05rem; background: var(--surface2); flex: none; }
+.dlg.editor { max-height: 90vh; overflow-y: auto; }
+.fld { display: block; font-size: .85rem; color: var(--muted); margin-top: 14px; }
+.fld input[type=text], .fld input[type=number], .fld textarea {
+  display: block; width: 100%; margin-top: 6px; padding: 12px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: 1rem;
+  -webkit-user-select: text; user-select: text;
+}
+.fld textarea { font-size: .9rem; resize: vertical; }
+.icon-pick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
+.icon-pick button { font-size: 1.4rem; height: 44px; border-radius: 12px; background: var(--surface); }
+.icon-pick button.on { background: var(--primary-c); outline: 2px solid var(--primary); }
+.seg { display: flex; margin-top: 6px; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+.seg button { flex: 1; padding: 10px; font-weight: 500; color: var(--text); }
+.seg button.on { background: var(--primary-c); }
+.fld-row { display: flex; gap: 14px; align-items: flex-end; }
+.fld-row > .fld:first-child { flex: 1; }
+.tgt-in { display: flex; align-items: center; gap: 8px; }
+.tgt-in input { flex: 1; }
+.tgt-in span { color: var(--muted); margin-top: 6px; }
+.side-sw { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-bottom: 6px; }
+.small-note { font-size: .85rem; margin: 14px 0 0; }
+.demo .pl-ico { margin: 0 auto 8px; }
+.howto .note { margin: 0; line-height: 1.5; white-space: pre-wrap; }
