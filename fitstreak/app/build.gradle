@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+// CI passes -PversionCode=<run number> so every new APK installs as an update.
+def ciVersionCode = project.hasProperty('versionCode') ? project.property('versionCode').toInteger() : 1
+
+android {
+    namespace 'com.fitstreak.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.fitstreak.app'
+        minSdk 26
+        targetSdk 34
+        versionCode ciVersionCode
+        versionName "1.0.${ciVersionCode}"
+    }
+
+    // A fixed key, kept in the repo, so every build is signed the same way.
+    // That lets a new APK install over the old one without losing your streak data.
+    signingConfigs {
+        fitstreak {
+            storeFile file('fitstreak.keystore')
+            storePassword 'fitstreak'
+            keyAlias 'fitstreak'
+            keyPassword 'fitstreak'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.fitstreak
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.fitstreak
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
