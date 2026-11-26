@@ -6,6 +6,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -20,13 +22,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         web = new WebView(this);
-        web.setBackgroundColor(0xFF0F172A);
+        web.setBackgroundColor(0xFFFEF7FF);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // workout history lives in localStorage
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
         web.setWebViewClient(new WebViewClient());
+        web.setWebChromeClient(new WebChromeClient()); // lets alert()/confirm() show if ever used
+        applyBars(false);
         web.addJavascriptInterface(new Bridge(), "Android");
         setContentView(web);
 
@@ -43,6 +47,19 @@ public class MainActivity extends Activity {
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
         }
+    }
+
+    /** Status/navigation bar colours that match the page theme. */
+    @SuppressWarnings("deprecation")
+    private void applyBars(boolean dark) {
+        int color = dark ? 0xFF141218 : 0xFFFEF7FF;
+        int nav = dark ? 0xFF1D1B20 : 0xFFF3EDF7;
+        getWindow().setStatusBarColor(color);
+        getWindow().setNavigationBarColor(nav);
+        if (web != null) web.setBackgroundColor(color);
+        int flags = 0;
+        if (!dark) flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        getWindow().getDecorView().setSystemUiVisibility(flags);
     }
 
     @Override
@@ -86,6 +103,11 @@ public class MainActivity extends Activity {
                 if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             });
+        }
+
+        @JavascriptInterface
+        public void setDarkTheme(boolean dark) {
+            runOnUiThread(() -> applyBars(dark));
         }
 
         @JavascriptInterface

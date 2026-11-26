@@ -118,7 +118,7 @@ final class Reminders {
         createChannel(c);
         Notification n = new Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat)
-                .setColor(0xFFF97316)
+                .setColor(0xFF65558F)
                 .setContentTitle(title)
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))

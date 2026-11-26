@@ -75,7 +75,7 @@
     return {
       plan: DEFAULT_PLAN.map(e => Object.assign({}, e)),
       history: {},
-      settings: { remOn: true, remTime: '06:30', eveningOn: true, rest: 15, sound: true }
+      settings: { remOn: true, remTime: '06:30', eveningOn: true, rest: 15, sound: true, theme: 'light' }
     };
   }
 
@@ -206,6 +206,54 @@
     toast._t = setTimeout(() => t.classList.add('hidden'), 2200);
   }
 
+  // ---------------------------------------------------------------- icons
+  const ICON = {
+    moon: 'M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z',
+    sun: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM11 1h2v3h-2zm0 19h2v3h-2zM3.5 4.9l1.4-1.4 2.1 2.1-1.4 1.4zm12.5 12.5 1.4-1.4 2.1 2.1-1.4 1.4zM1 11h3v2H1zm19 0h3v2h-3zM3.5 19.1l2.1-2.1 1.4 1.4-2.1 2.1zM16 6l2.1-2.1 1.4 1.4-2.1 2.1z',
+    check: 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+    play: 'M8 5v14l11-7z'
+  };
+  const svg = (name, size) => '<svg width="' + (size || 24) + '" height="' + (size || 24) + '" viewBox="0 0 24 24" fill="currentColor"><path d="' + ICON[name] + '"/></svg>';
+
+  // soft tinted background per exercise, like category chips
+  const TINT = { pushups: 'green', squats: 'blue', lunges: 'orange', jacks: 'yellow', climbers: 'teal', plank: 'purple', sideplank: 'pink' };
+
+  // ---------------------------------------------------------------- dialog
+  // In-app replacement for confirm(): Android WebView does not show browser dialogs.
+  let dialogResolve = null;
+  function ask(title, msg, okLabel, danger) {
+    const d = $('#dialog');
+    d.innerHTML = '<div class="dlg"><h3>' + esc(title) + '</h3><p>' + esc(msg) + '</p><div class="dlg-btns">' +
+      '<button class="tbtn" data-act="dlg-no">Cancel</button>' +
+      '<button class="tbtn ' + (danger ? 'danger' : 'primary') + '" data-act="dlg-yes">' + esc(okLabel) + '</button></div></div>';
+    d.classList.remove('hidden');
+    return new Promise(res => { dialogResolve = res; });
+  }
+  function closeDialog(answer) {
+    $('#dialog').classList.add('hidden');
+    const r = dialogResolve; dialogResolve = null;
+    if (r) r(answer);
+  }
+
+  // ---------------------------------------------------------------- theme
+  function applyTheme() {
+    const dark = S.settings.theme === 'dark';
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    $('meta[name=theme-color]').setAttribute('content', dark ? '#141218' : '#fef7ff');
+    callNative('setDarkTheme', dark);
+  }
+
+  function greeting() {
+    const h = new Date().getHours();
+    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  }
+
+  function header(title, sub) {
+    const dark = S.settings.theme === 'dark';
+    return '<div class="top"><div><div class="sub">' + esc(sub) + '</div><div class="title">' + esc(title) + '</div></div>' +
+      '<button class="round-btn" data-act="theme" aria-label="theme">' + svg(dark ? 'sun' : 'moon') + '</button></div>';
+  }
+
   // ---------------------------------------------------------------- views
   function render() {
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
@@ -226,9 +274,6 @@
 
   function viewToday() {
     const t = today();
-    const h = new Date().getHours();
-    const hello = h < 12 ? 'Good morning ☀️' : h < 17 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
-    const dateTxt = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
     const streak = currentStreak();
     const done = doneCount(t), total = S.plan.length, complete = isComplete(t);
     const q = quoteOfDay();
@@ -240,37 +285,41 @@
     else if (done === 0) status = streak > 0 ? 'Keep your ' + streak + '-day streak alive 🔥' : 'Let\'s start your streak today!';
     else status = (total - done) + ' more to go. നിർത്തരുത്!';
 
-    let html =
-      '<div class="top"><div><div class="hello">' + hello + '</div><div class="date">' + esc(dateTxt) + '</div></div>' +
-      '<div class="streak-pill ' + (streak ? '' : 'cold') + '"><b>' + (streak ? '🔥 ' : '') + streak + '</b><small>day streak</small></div></div>' +
-
-      '<div class="card quote">' + esc(q[0]) + '<small>' + esc(q[1]) + '</small></div>' +
-
-      '<div class="card prog"><div class="ring ' + (complete ? 'full' : '') + '">' + ringSvg(84, 36, done / total) +
-      '<div class="lbl">' + done + '/' + total + '</div></div>' +
-      '<div><h3>Today\'s workout</h3><p>' + status + '</p></div></div>';
+    const monthTxt = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+    let html = header('Today\'s Workout', greeting()) +
+      '<div class="hero"><div class="hero-lbl">Current streak</div>' +
+      '<div class="hero-num">' + streak + ' <span>day' + (streak === 1 ? '' : 's') + ' 🔥</span></div>' +
+      '<div class="hero-date">' + esc(monthTxt) + '</div>' +
+      '<div class="hero-bar"><div style="width:' + Math.round(done / total * 100) + '%"></div></div>' +
+      '<div class="hero-tiles">' +
+      '<div class="tile"><div class="tile-ico">' + svg('check', 20) + '</div><div><small>Done today</small><b>' + done + ' / ' + total + '</b></div></div>' +
+      '<div class="tile"><div class="tile-ico">🏆</div><div><small>Best streak</small><b>' + best + ' day' + (best === 1 ? '' : 's') + '</b></div></div>' +
+      '</div></div>';
 
     if (complete) {
-      html += '<div class="done-banner">✅ ഇന്നത്തെ വർക്കൗട്ട് പൂർത്തിയായി! See you tomorrow.</div>';
+      html += '<div class="done-banner">✅ ഇന്നത്തെ വർക്കൗട്ട് പൂർത്തിയായി! Screen time earned 📱</div>';
     } else {
-      html += '<button class="btn primary" data-act="start">▶ ' + (done ? 'Continue workout' : 'Start workout') + '</button>';
+      html += '<button class="btn primary" data-act="start">' + svg('play', 22) + (done ? 'Continue workout' : 'Start workout') + '</button>' +
+        '<p class="status">' + status + '</p>';
     }
 
-    html += '<h2>EXERCISES · tap to do one, ✓ to log quickly</h2>';
+    html += '<div class="card quote"><div class="q-ml">' + esc(q[0]) + '</div><div class="q-en">' + esc(q[1]) + '</div></div>';
+
+    html += '<div class="sec-head"><h2>Exercises</h2><span class="muted">' + done + ' of ' + total + ' done</span></div>';
     for (const e of S.plan) {
       const d = isDone(t, e.id);
       html += '<div class="ex ' + (d ? 'done' : '') + '" data-act="open" data-id="' + e.id + '">' +
-        '<div class="ico">' + e.icon + '</div>' +
-        '<div class="info"><div class="name">' + esc(e.name) + ' <span class="ml">' + esc(e.ml) + '</span></div>' +
-        '<div class="tgt">' + targetText(e) + '</div></div>' +
-        '<button class="chk" data-act="toggle" data-id="' + e.id + '" aria-label="mark done">✓</button></div>';
+        '<div class="ico tint-' + (TINT[e.id] || 'purple') + '">' + e.icon + '</div>' +
+        '<div class="info"><div class="name">' + esc(e.name) + '</div>' +
+        '<div class="tgt">' + esc(e.ml) + ' &nbsp;•&nbsp; ' + targetText(e) + '</div></div>' +
+        '<button class="chk" data-act="toggle" data-id="' + e.id + '" aria-label="mark done">' + svg('check', 22) + '</button></div>';
     }
 
     if (nb) {
       const pct = Math.min(100, Math.round(best / nb[0] * 100));
       const left = nb[0] - streak;
-      html += '<h2>NEXT BADGE</h2><div class="card"><div style="display:flex;align-items:center;gap:12px">' +
-        '<div style="font-size:2rem">' + nb[1] + '</div><div style="flex:1"><b>' + esc(nb[2]) + '</b>' +
+      html += '<div class="sec-head"><h2>Next badge</h2></div><div class="card"><div style="display:flex;align-items:center;gap:14px">' +
+        '<div class="ico tint-yellow">' + nb[1] + '</div><div style="flex:1"><b>' + esc(nb[2]) + '</b>' +
         '<div class="muted" style="font-size:.85rem">' + nb[0] + '-day streak · ' +
         (left > 0 ? left + ' more day' + (left > 1 ? 's' : '') + ' in a row' : 'almost there!') + '</div></div></div>' +
         '<div class="bar"><div style="width:' + pct + '%"></div></div></div>';
@@ -284,12 +333,12 @@
     const monthPrefix = now.getFullYear() + '-' + pad(now.getMonth() + 1);
     const thisMonth = Object.keys(S.history).filter(k => k.startsWith(monthPrefix) && isComplete(k)).length;
 
-    let html = '<div class="top"><div class="hello">Your progress 📈</div></div>' +
+    let html = header('Your Progress', 'Keep the chain going') +
       '<div class="stats">' +
-      '<div class="stat"><b>🔥 ' + streak + '</b><span>Current streak</span></div>' +
-      '<div class="stat"><b>🏆 ' + best + '</b><span>Best streak</span></div>' +
-      '<div class="stat"><b>✅ ' + totalDays() + '</b><span>Total workouts</span></div>' +
-      '<div class="stat"><b>📅 ' + thisMonth + '</b><span>This month</span></div>' +
+      '<div class="stat"><div class="ico tint-orange">🔥</div><b>' + streak + '</b><span>Current streak</span></div>' +
+      '<div class="stat"><div class="ico tint-yellow">🏆</div><b>' + best + '</b><span>Best streak</span></div>' +
+      '<div class="stat"><div class="ico tint-green">✅</div><b>' + totalDays() + '</b><span>Total workouts</span></div>' +
+      '<div class="stat"><div class="ico tint-blue">📅</div><b>' + thisMonth + '</b><span>This month</span></div>' +
       '</div>';
 
     // calendar
@@ -299,7 +348,7 @@
     const t = today();
     const allDays = Object.keys(S.history).sort();
     const firstDay = allDays[0];
-    html += '<h2>CALENDAR</h2><div class="card"><div class="cal-head">' +
+    html += '<h2>Calendar</h2><div class="card"><div class="cal-head">' +
       '<button data-act="cal" data-d="-1">‹</button><b>' + first.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) +
       '</b><button data-act="cal" data-d="1">›</button></div><div class="cal">';
     ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach(d => { html += '<div class="dow">' + d + '</div>'; });
@@ -315,12 +364,12 @@
       html += '<div class="' + cls + '">' + d + '</div>';
     }
     html += '</div><div class="legend"><span><i style="background:var(--green)"></i>Done</span>' +
-      '<span><i style="background:rgba(245,158,11,.5)"></i>Partial</span>' +
-      '<span><i style="background:rgba(239,68,68,.3)"></i>Missed</span></div></div>';
+      '<span><i style="background:var(--amber)"></i>Partial</span>' +
+      '<span><i style="background:var(--red-c)"></i>Missed</span></div></div>';
 
     // lifetime totals
     const tot = totals();
-    html += '<h2>LIFETIME TOTALS</h2><div class="card totals">';
+    html += '<h2>Lifetime totals</h2><div class="card totals">';
     for (const e of S.plan) {
       const v = tot[e.id] || 0;
       const txt = e.type === 'time' ? (v >= 60 ? (v / 60).toFixed(v % 60 ? 1 : 0) + ' min' : v + ' sec') : fmtNum(v) + ' reps';
@@ -329,7 +378,7 @@
     html += '</div>';
 
     // badges
-    html += '<h2>BADGES</h2><div class="badges">';
+    html += '<h2>Badges</h2><div class="badges">';
     for (const b of BADGES) {
       const got = best >= b[0];
       html += '<div class="badge ' + (got ? '' : 'locked') + '"><div class="e">' + b[1] + '</div><div class="t">' + esc(b[2]) +
@@ -342,16 +391,16 @@
   function viewSettings() {
     const st = S.settings;
     const app = !!native;
-    let html = '<div class="top"><div class="hello">Settings ⚙️</div></div>';
+    let html = header('Settings', 'Make it yours');
 
-    html += '<h2>REMINDERS</h2><div class="card">' +
+    html += '<h2>Reminders</h2><div class="card">' +
       '<div class="set-row"><label>⏰ Morning reminder</label>' + sw('remOn', st.remOn) + '</div>' +
       '<div class="set-row"><label>Reminder time</label><input type="time" data-set="remTime" value="' + st.remTime + '"></div>' +
       '<div class="set-row"><label>⚠️ 9 PM alert if not done<br><span class="ml">Streak danger warning</span></label>' + sw('eveningOn', st.eveningOn) + '</div>' +
       (app ? '' : '<p class="muted" style="font-size:.8rem;margin:8px 0 0">Reminders work in the Android app.</p>') +
       '</div>';
 
-    html += '<h2>WORKOUT TARGETS · level up when it gets easy</h2><div class="card">';
+    html += '<h2>Workout targets</h2><div class="card">';
     for (const e of S.plan) {
       html += '<div class="set-row"><label>' + e.icon + ' ' + esc(e.name) + '<br><span class="ml">' +
         (e.type === 'time' ? 'seconds' : 'reps') + (e.sides === 2 ? ' · each side' : '') + '</span></label>' +
@@ -360,20 +409,21 @@
     html += '<div class="btn-row"><button class="btn small ghost" data-act="levelup">⬆️ Level up (+10%)</button>' +
       '<button class="btn small ghost" data-act="defaults">↺ Default targets</button></div></div>';
 
-    html += '<h2>WORKOUT</h2><div class="card">' +
+    html += '<h2>Workout</h2><div class="card">' +
       '<div class="set-row"><label>Rest between exercises</label><select data-set="rest">' +
       [0, 10, 15, 20, 30, 45, 60].map(s => '<option value="' + s + '"' + (st.rest == s ? ' selected' : '') + '>' + (s ? s + ' sec' : 'No rest') + '</option>').join('') +
       '</select></div>' +
-      '<div class="set-row"><label>🔊 Sounds</label>' + sw('sound', st.sound) + '</div></div>';
+      '<div class="set-row"><label>🔊 Sounds</label>' + sw('sound', st.sound) + '</div>' +
+      '<div class="set-row"><label>🌙 Dark mode</label><label class="switch"><input type="checkbox" data-act="theme-sw"' + (st.theme === 'dark' ? ' checked' : '') + '><span></span></label></div></div>';
 
-    html += '<h2>BACKUP</h2><div class="card"><p class="muted" style="font-size:.85rem;margin-top:0">' +
+    html += '<h2>Backup</h2><div class="card"><p class="muted" style="font-size:.85rem;margin-top:0">' +
       'Your history is stored only on this phone. Copy this backup somewhere safe (WhatsApp to yourself, notes…) before reinstalling.</p>' +
       '<textarea class="backup" id="backupBox" placeholder="Paste a backup here to restore"></textarea>' +
       '<div class="btn-row"><button class="btn small ghost" data-act="export">📤 Show backup</button>' +
       '<button class="btn small ghost" data-act="copy">📋 Copy</button>' +
       '<button class="btn small ghost" data-act="import">📥 Restore</button></div></div>';
 
-    html += '<h2>DANGER ZONE</h2><button class="btn danger" data-act="reset">Delete all data</button>' +
+    html += '<h2>Danger zone</h2><button class="btn danger" data-act="reset">Delete all data</button>' +
       '<p class="muted" style="text-align:center;font-size:.75rem;margin-top:24px">FitStreak · Earn your screen time 💪</p>';
     return html;
   }
@@ -602,6 +652,13 @@
       case 'finish': finishStep(); break;
       case 'skip': stopTimer(); startStep(); break;
       case 'more': if (P && P.addRest) P.addRest(); break;
+      case 'theme':
+      case 'theme-sw':
+        S.settings.theme = S.settings.theme === 'dark' ? 'light' : 'dark';
+        save(); applyTheme(); if (act === 'theme') render();
+        break;
+      case 'dlg-yes': closeDialog(true); break;
+      case 'dlg-no': closeDialog(false); break;
       case 'celok': $('#celebrate').classList.add('hidden'); render(); break;
       case 'cal':
         calMonth.setMonth(calMonth.getMonth() + Number(t.dataset.d));
@@ -632,16 +689,21 @@
         try {
           const s = JSON.parse($('#backupBox').value);
           if (!s || !Array.isArray(s.plan) || typeof s.history !== 'object') throw new Error('bad');
-          if (!confirm('Replace all current data with this backup?')) return;
           s.settings = Object.assign(fresh().settings, s.settings || {});
-          S = s; save(); pushReminders(); render(); toast('Backup restored ✓');
+          ask('Restore backup?', 'All current data will be replaced with this backup.', 'Restore', false).then(ok => {
+            if (!ok) return;
+            S = s; save(); pushReminders(); applyTheme(); render(); toast('Backup restored ✓');
+          });
         } catch (e) { toast('That doesn\'t look like a FitStreak backup'); }
         break;
       }
       case 'reset':
-        if (confirm('Delete ALL workout history and settings? This cannot be undone.') && confirm('Really sure? Your streak will be lost.')) {
-          S = fresh(); save(); pushReminders(); render(); toast('All data deleted');
-        }
+        ask('Delete all data?', 'All workout history, streaks and settings will be deleted. This cannot be undone.', 'Delete', true)
+          .then(ok => ok && ask('Are you really sure?', 'Your ' + currentStreak() + '-day streak will be lost.', 'Yes, delete everything', true))
+          .then(ok => {
+            if (!ok) return;
+            S = fresh(); save(); pushReminders(); applyTheme(); render(); toast('All data deleted');
+          });
         break;
     }
   });
@@ -664,6 +726,7 @@
 
   // Android back button: return true when something was closed.
   window.handleBack = function () {
+    if (!$('#dialog').classList.contains('hidden')) { closeDialog(false); return true; }
     if (!$('#celebrate').classList.contains('hidden')) { $('#celebrate').classList.add('hidden'); render(); return true; }
     if (P) { closePlayer(); return true; }
     if (tab !== 'today') { tab = 'today'; render(); return true; }
@@ -678,6 +741,7 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) window.onAppResume(); });
 
   // ---------------------------------------------------------------- start
+  applyTheme();
   save();
   pushReminders();
   render();
