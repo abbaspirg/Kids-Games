@@ -43,7 +43,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body {
-  font-family: Roboto, system-ui, -apple-system, "Noto Sans Malayalam", sans-serif;
+  font-family: Roboto, system-ui, -apple-system, sans-serif;
   padding-bottom: 92px;
   -webkit-user-select: none; user-select: none;
   transition: background .25s;

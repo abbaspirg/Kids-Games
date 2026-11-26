@@ -9,7 +9,7 @@ A daily morning-workout tracker for Android that keeps you disciplined:
 - **Badges** at 1, 3, 7, 14, 21, 30, 50, 100 and 365 days in a row
 - **Reminders**: a morning notification at your chosen time, plus a 9 PM "streak in danger" alert
   (both skipped if you've already finished the day)
-- Malayalam + English motivation quotes
+- Daily motivation quotes
 - Editable targets and a "Level up (+10%)" button
 - Backup / restore (copy-paste text)
 

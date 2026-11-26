@@ -102,12 +102,12 @@ final class Reminders {
         String text;
         if (id == EVENING) {
             title = streak > 0 ? "⚠️ Your " + streak + "-day streak is in danger!" : "⚠️ Today's workout is still waiting";
-            text = "ഇന്നത്തെ വർക്കൗട്ട് ഇനിയും ബാക്കി! Just 15 minutes — don't break the chain.";
+            text = "Today's workout is still waiting. Just 15 minutes — don't break the chain.";
         } else {
             title = "🔥 Earn your screen time!";
             text = streak > 0
-                    ? "Day " + (streak + 1) + " is waiting. ഫോൺ നോക്കുന്നതിന് മുമ്പ് വർക്കൗട്ട് ചെയ്യൂ!"
-                    : "ഫോൺ നോക്കുന്നതിന് മുമ്പ് വർക്കൗട്ട് ചെയ്യൂ! Start today.";
+                    ? "Day " + (streak + 1) + " is waiting. Work out before you check your phone!"
+                    : "Work out before you check your phone! Start your streak today.";
         }
 
         Intent open = new Intent(c, MainActivity.class)

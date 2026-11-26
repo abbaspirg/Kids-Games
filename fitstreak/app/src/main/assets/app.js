@@ -5,35 +5,35 @@
   const KEY = 'fitstreak.v1';
 
   const DEFAULT_PLAN = [
-    { id: 'pushups',   name: 'Push-ups',          ml: 'പുഷ്-അപ്പ്',         type: 'reps', target: 40, sides: 1, icon: '💪',
+    { id: 'pushups',   name: 'Push-ups',          type: 'reps', target: 40, sides: 1, icon: '💪',
       tip: 'Body in a straight line, chest close to the floor. Drop to your knees if you need to — just keep going.' },
-    { id: 'squats',    name: 'Squats',            ml: 'സ്ക്വാറ്റ്',          type: 'reps', target: 40, sides: 1, icon: '🦵',
+    { id: 'squats',    name: 'Squats',            type: 'reps', target: 40, sides: 1, icon: '🦵',
       tip: 'Feet shoulder-width apart, push hips back, thighs parallel to the floor, chest up.' },
-    { id: 'lunges',    name: 'Lunges',            ml: 'ലഞ്ച്',              type: 'reps', target: 20, sides: 2, icon: '🚶',
+    { id: 'lunges',    name: 'Lunges',            type: 'reps', target: 20, sides: 2, icon: '🚶',
       tip: 'Step forward, lower until both knees are at 90°. Front knee stays over the ankle.' },
-    { id: 'jacks',     name: 'Jumping Jacks',     ml: 'ജമ്പിംഗ് ജാക്ക്',     type: 'reps', target: 50, sides: 1, icon: '⭐',
+    { id: 'jacks',     name: 'Jumping Jacks',     type: 'reps', target: 50, sides: 1, icon: '⭐',
       tip: 'Jump feet out while raising arms overhead, then back. Stay light on your toes.' },
-    { id: 'climbers',  name: 'Mountain Climbers', ml: 'മൗണ്ടൻ ക്ലൈംബർ',    type: 'reps', target: 50, sides: 1, icon: '⛰️',
+    { id: 'climbers',  name: 'Mountain Climbers', type: 'reps', target: 50, sides: 1, icon: '⛰️',
       tip: 'High plank position, drive knees to chest one after another. Fast but controlled.' },
-    { id: 'plank',     name: 'Plank',             ml: 'പ്ലാങ്ക്',            type: 'time', target: 60, sides: 1, icon: '🧱',
+    { id: 'plank',     name: 'Plank',             type: 'time', target: 60, sides: 1, icon: '🧱',
       tip: 'Elbows under shoulders, squeeze glutes and core. Don\'t let your hips sag.' },
-    { id: 'sideplank', name: 'Side Plank',        ml: 'സൈഡ് പ്ലാങ്ക്',       type: 'time', target: 60, sides: 2, icon: '📐',
+    { id: 'sideplank', name: 'Side Plank',        type: 'time', target: 60, sides: 2, icon: '📐',
       tip: 'Elbow under shoulder, body in one straight line, hips lifted high.' }
   ];
 
   const QUOTES = [
-    ['ഫോൺ കാത്തിരിക്കും. നിങ്ങളുടെ ആരോഗ്യം കാത്തിരിക്കില്ല.', 'Your phone can wait. Your health can\'t.'],
-    ['ഇന്ന് ഒഴുക്കുന്ന വിയർപ്പാണ് നാളത്തെ കരുത്ത്.', 'Today\'s sweat is tomorrow\'s strength.'],
-    ['മോട്ടിവേഷൻ വരും, പോകും. ഡിസിപ്ലിൻ ആണ് നിങ്ങളെ മുന്നോട്ട് കൊണ്ടുപോകുന്നത്.', 'Motivation comes and goes. Discipline keeps you going.'],
-    ['ചെയിൻ പൊട്ടിക്കരുത്! ഒരു ദിവസം പോലും.', 'Don\'t break the chain. Not even for one day.'],
-    ['"നാളെ തുടങ്ങാം" എന്ന് പറയരുത്. ഇന്ന്, ഇപ്പോൾ!', 'Not tomorrow. Today. Right now.'],
-    ['ചെറിയ തുടക്കം, വലിയ മാറ്റം.', 'Small start, big change.'],
-    ['15 മിനിറ്റ് നിങ്ങൾക്കു വേണ്ടി. ബാക്കി ദിവസം ലോകത്തിനു വേണ്ടി.', '15 minutes for you. The rest of the day for the world.'],
-    ['ഏറ്റവും ബുദ്ധിമുട്ട് തുടങ്ങാനാണ്. ആദ്യത്തെ പുഷ്-അപ്പ് മാത്രം ചെയ്യൂ.', 'The hardest part is starting. Just do the first push-up.'],
-    ['ഇന്നലത്തെ നിങ്ങളെക്കാൾ ഒരു പടി മുന്നിൽ.', 'Be one step ahead of yesterday\'s you.'],
-    ['സ്ക്രീൻ ടൈം സമ്പാദിക്കൂ. 💪', 'Earn your screen time.'],
-    ['എക്സ്ട്രീം ആകേണ്ട, കൺസിസ്റ്റന്റ് ആയാൽ മതി.', 'You don\'t need to be extreme. Just consistent.'],
-    ['ശരീരം കേൾക്കും, മനസ്സ് പറഞ്ഞാൽ.', 'The body follows where the mind leads.']
+    'Your phone can wait. Your health can\'t.',
+    'Today\'s sweat is tomorrow\'s strength.',
+    'Motivation comes and goes. Discipline keeps you going.',
+    'Don\'t break the chain. Not even for one day.',
+    'Not tomorrow. Today. Right now.',
+    'Small start, big change.',
+    '15 minutes for you. The rest of the day for the world.',
+    'The hardest part is starting. Just do the first push-up.',
+    'Be one step ahead of yesterday\'s you.',
+    'Earn your screen time. 💪',
+    'You don\'t need to be extreme. Just consistent.',
+    'The body follows where the mind leads.'
   ];
 
   const BADGES = [
@@ -49,10 +49,10 @@
   ];
 
   const CHEERS = [
-    'ഇന്നത്തെ ജോലി കഴിഞ്ഞു! Now you\'ve earned your screen time 📱',
-    'അടിപൊളി! Your future self says thank you.',
-    'Another brick in the wall. ചെയിൻ തുടരുന്നു! 🔗',
-    'Discipline > motivation. ഇന്നും നിങ്ങൾ ജയിച്ചു! 🏅'
+    'Today\'s work is done! Now you\'ve earned your screen time 📱',
+    'Awesome! Your future self says thank you.',
+    'Another link in the chain. Keep it going! 🔗',
+    'Discipline beats motivation. You won today too! 🏅'
   ];
 
   // ---------------------------------------------------------------- helpers
@@ -85,6 +85,7 @@
       if (s && Array.isArray(s.plan)) {
         s.settings = Object.assign(fresh().settings, s.settings || {});
         s.history = s.history || {};
+        s.plan.forEach(e => { delete e.ml; });   // older versions stored Malayalam names
         return s;
       }
     } catch (e) { /* fall through */ }
@@ -421,7 +422,7 @@
     let status;
     if (complete) status = 'All done! Screen time earned 📱';
     else if (done === 0) status = streak > 0 ? 'Keep your ' + streak + '-day streak alive 🔥' : 'Let\'s start your streak today!';
-    else status = (total - done) + ' more to go. നിർത്തരുത്!';
+    else status = (total - done) + ' more to go. Don\'t stop now!';
 
     const monthTxt = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
     let html = header('Today\'s Workout', greeting()) +
@@ -435,13 +436,13 @@
       '</div></div>';
 
     if (complete) {
-      html += '<div class="done-banner">✅ ഇന്നത്തെ വർക്കൗട്ട് പൂർത്തിയായി! Screen time earned 📱</div>';
+      html += '<div class="done-banner">✅ Today\'s workout is complete! Screen time earned 📱</div>';
     } else {
       html += '<button class="btn primary" data-act="start">' + svg('play', 22) + (done ? 'Continue workout' : 'Start workout') + '</button>' +
         '<p class="status">' + status + '</p>';
     }
 
-    html += '<div class="card quote"><div class="q-ml">' + esc(q[0]) + '</div><div class="q-en">' + esc(q[1]) + '</div></div>';
+    html += '<div class="card quote"><div class="q-ml">“' + esc(q) + '”</div></div>';
 
     html += '<div class="sec-head"><h2>Exercises</h2><span class="muted">' + done + ' of ' + total + ' done</span></div>';
     for (const e of S.plan) {
@@ -449,7 +450,7 @@
       html += '<div class="ex ' + (d ? 'done' : '') + '" data-act="open" data-id="' + e.id + '">' +
         '<div class="ico fig-chip tint-' + (TINT[e.id] || 'purple') + '">' + (POSES[e.id] ? figure(e.id, false) : e.icon) + '</div>' +
         '<div class="info"><div class="name">' + esc(e.name) + '</div>' +
-        '<div class="tgt">' + esc(e.ml) + ' &nbsp;•&nbsp; ' + targetText(e) + '</div></div>' +
+        '<div class="tgt">' + targetText(e) + '</div></div>' +
         '<button class="chk" data-act="toggle" data-id="' + e.id + '" aria-label="mark done">' + svg('check', 22) + '</button></div>';
     }
 
@@ -637,7 +638,7 @@
     const html =
       '<div class="pl"><div class="pl-top"><button class="x" data-act="close">✕</button>' + dotsHtml() + '</div>' +
       '<div class="pl-body"><div class="demo tint-' + (TINT[e.id] || 'purple') + '">' + (POSES[e.id] ? figure(e.id, true) : '<div class="pl-ico">' + e.icon + '</div>') + '</div>' +
-      '<div class="pl-name">' + esc(e.name) + '</div><div class="ml">' + esc(e.ml) + '</div>' +
+      '<div class="pl-name">' + esc(e.name) + '</div>' +
       (s.side ? '<div class="pl-side">' + s.side + '</div>' : '') +
       '<div class="big-ring ' + (isTime ? '' : 'tap') + (!isTime && P.count >= e.target ? ' hit' : '') + '" id="bigRing" ' + (isTime ? '' : 'data-act="count"') + '>' +
       ringSvg(230, 100, frac) +
@@ -747,7 +748,7 @@
     el.innerHTML = '<div class="pl cel"><div class="big">🎉</div><h1>Day ' + streak + ' complete!</h1>' +
       '<p>🔥 ' + streak + '-day streak</p><p>' + esc(cheer) + '</p>' +
       (isNewBest ? '<div class="newbadge"><div style="font-size:2.4rem">' + badge[1] + '</div><b>New badge: ' + esc(badge[2]) + '</b></div>' : '') +
-      '<button class="btn primary" data-act="celok">അടിപൊളി! 💪</button></div>';
+      '<button class="btn primary" data-act="celok">Awesome! 💪</button></div>';
     el.classList.remove('hidden');
     beep(660, 120); setTimeout(() => beep(880, 120), 140); setTimeout(() => beep(1180, 300), 280);
     buzz([80, 60, 80, 60, 200]);
